@@ -12,7 +12,7 @@
 # Hope for the best ...
 
 # First, let's make sure we have some logs to go on. 
-su -c "/usr/lib/postgresql/13/bin/postgres -D /data/database >> /var/log/postgresql/postgresql-gvmd.log 2>&1 &" postgres
+su -c "/usr/lib/postgresql/${PGVER}/bin/postgres -D /data/database >> /var/log/postgresql/postgresql-gvmd.log 2>&1 &" postgres
 # wait for it to fail.
 sleep 5
 echo " Log status ...."

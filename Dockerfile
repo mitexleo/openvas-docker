@@ -2,7 +2,7 @@
 
 # Stage 0: 
 # Start with ovasbase with running dependancies installed.
-FROM immauss/ovasbase:latest AS builder
+FROM mitexleo/ovasbase:latest AS builder
 
 # Ensure apt doesn't ask any questions 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,11 +37,11 @@ RUN bash /build.d/gsad.sh
 # Stage 1: Start again with the ovasbase. Dependancies already installed
 # This target is for the image with no database
 # Makes rebuilds for data refresh and scripting changes faster. 
-FROM immauss/ovasbase:latest AS slim
-LABEL maintainer="scott@immauss.com" \
+FROM mitexleo/ovasbase:latest AS slim
+LABEL maintainer="scott@mitexleo.com" \
       version="$VER-slim" \
-      url="https://hub.docker.com/r/immauss/openvas" \
-      source="https://github.com/immauss/openvas"     
+      url="https://hub.docker.com/r/mitexleo/openvas" \
+      source="https://github.com/mitexleo/openvas"     
 EXPOSE 9392
 ENV LANG=C.UTF-8
 # Copy the just built from stage 0
@@ -90,10 +90,10 @@ HEALTHCHECK --interval=300s --start-period=300s --timeout=120s \
 ENTRYPOINT [ "/scripts/start.sh" ]
 
 FROM slim AS final
-LABEL maintainer="scott@immauss.com" \
+LABEL maintainer="scott@mitexleo.com" \
       version="$VER-full" \
-      url="https://hub.docker.com/r/immauss/openvas" \
-      source="https://github.com/immauss/openvas"
+      url="https://hub.docker.com/r/mitexleo/openvas" \
+      source="https://github.com/mitexleo/openvas"
 
 COPY globals.sql.xz /usr/lib/globals.sql.xz
 COPY gvmd.sql.xz /usr/lib/gvmd.sql.xz

@@ -1,5 +1,5 @@
-#!/bin/bash 
-# This will setup all the links and directories required by the image. 
+#!/bin/bash
+# This will setup all the links and directories required by the image.
 echo "Creating needed Directories"
 mkdir -p /run/gvm
 mkdir -p /run/ospd
@@ -32,7 +32,7 @@ mkdir -p /data/local-etc/openvas/gnupg
 mkdir -p /data/local-etc/gvm
 
 # set /data permissions so postgres can create a new DB directory on /data
-chmod 775 /data 
+chmod 775 /data
 usermod -G ssl-cert,postgres,root postgres
 
 
@@ -42,20 +42,37 @@ echo "Setting up soft links"
 if [[ ! -d /data/database/base ]] && \
    ([[ -z "$1" ]] || [[ "$1" == "postgresql" ]] || [[ "$1" == "refresh" ]]); then
 	echo "Database"
-	if ! [ -d /var/lib/postgresql/${PGVER} ]; then
-		pg_createcluster ${PGVER} main
+	# Check if PostgreSQL cluster already exists (configuration)
+	if pg_lsclusters | grep -q "^${PGVER}.*main"; then
+		echo "Cluster ${PGVER}/main already exists in configuration."
+		# Check if data directory exists and is not empty
+		if [ -d /var/lib/postgresql/${PGVER}/main ] && [ -n "$(ls -A /var/lib/postgresql/${PGVER}/main/ 2>/dev/null)" ]; then
+			echo "Cluster data directory exists and has files."
+		else
+			echo "Cluster data directory missing or empty. Dropping cluster..."
+			pg_dropcluster ${PGVER} main --stop || true
+			pg_createcluster ${PGVER} main || true
+		fi
+	else
+		# No cluster configuration, create one
+		pg_createcluster ${PGVER} main || true
 	fi
-	mv /var/lib/postgresql/${PGVER}/main/* /data/database/ 
+	# Ensure the data directory exists and has files
+	if [ ! -d /var/lib/postgresql/${PGVER}/main ] || [ -z "$(ls -A /var/lib/postgresql/${PGVER}/main/ 2>/dev/null)" ]; then
+		echo "ERROR: PostgreSQL cluster not properly initialized. Cannot proceed."
+		exit 1
+	fi
+	mv /var/lib/postgresql/${PGVER}/main/* /data/database/
 	rm -rf /var/lib/postgresql/${PGVER}/main
 	ln -s /data/database /var/lib/postgresql/${PGVER}/main
 	chown postgres /data/database
 	chmod 0700 /data/database
-else 
+else
 	echo "/data/database/base already exists ..."
 	echo " NOT moving data from image to /data"
 fi
 
-# Fix up var/lib 
+# Fix up var/lib
 if ! [ -L /usr/local/var/lib ]; then
 	echo "/usr/local/var/lib"
 	if [ -d /usr/local/var/lib ]; then
@@ -66,30 +83,30 @@ if ! [ -L /usr/local/var/lib ]; then
 	ln -s /data/var-lib /usr/local/var/lib
 fi
 
-if ! [ -L /usr/local/var/log ]; then 
+if ! [ -L /usr/local/var/log ]; then
 	echo "/usr/local/var/log"
 	# Don't copy over existing log files
 	#cp -rf /usr/local/var/log/* /data/var-log/
 	rm -rf /usr/local/var/log
-	ln -s /data/var-log /usr/local/var/log 
+	ln -s /data/var-log /usr/local/var/log
 fi
 if ! [ -L /var/log ]; then
 	echo "/var/log"
-	# Don't copy over existing log files ... 
+	# Don't copy over existing log files ...
 	#cp -rf /var/log/* /data/var-log/
-	rm -rf /var/log 
+	rm -rf /var/log
 	ln -s /data/var-log /var/log
 fi
 
 # Here we make sure the main log directory exists and all
-# of the logs we expect are there and the right permissions. 
-# This ensure they will get sent to docker via the tail -F 
-# at the end of the init script. 
+# of the logs we expect are there and the right permissions.
+# This ensure they will get sent to docker via the tail -F
+# at the end of the init script.
 echo "Setting up logs"
 mkdir -p /var/log/gvm
 for log in gvmd.log  healthchecks.log  notus-scanner.log  openvas.log  ospd-openvas.log  redis-server.log; do
 	touch /var/log/gvm/$log
-done 
+done
 chmod 644 /var/log/gvm/*
 chown gvm:gvm /var/log/gvm/gvmd.log
 
@@ -112,7 +129,7 @@ fi
 # Fix up /var/lib/gvm
 if ! [ -L /var/lib/gvm ]; then
 	echo "Fixing /var/lib/gvm"
-	if [ -d /var/lib/gvm ] ; then 
+	if [ -d /var/lib/gvm ] ; then
 		echo "Preserve contents of /var/lib/gvm"
 		cp -rpf /var/lib/gvm/* /data/var-lib/gvm
 	fi
@@ -132,7 +149,7 @@ if ! [ -L /var/lib/notus ]; then
 fi
 
 # Fix up /var/lib/openvas
-if ! [ -L /var/lib/openvas ] && { [ "$1" == "gvmd" ] || [ -z $1 ] || [ $1 == "refresh" ]; };  then 
+if ! [ -L /var/lib/openvas ] && { [ "$1" == "gvmd" ] || [ -z $1 ] || [ $1 == "refresh" ]; };  then
 	echo "Fixing /var/lib/openvas"
 	if [ -d /var/lib/openvas ]; then
 		echo "Preserving contents of /var/lib/openvas"
@@ -152,7 +169,7 @@ fi
 
 if ! [ -L /usr/local/etc/gvm ]; then
 	echo "Handling config files"
-	cp -rpn  /usr/local/etc/gvm/* /data/local-etc/gvm/  2> /dev/null 
+	cp -rpn  /usr/local/etc/gvm/* /data/local-etc/gvm/  2> /dev/null
 	rm -rf /etc/gvm /usr/local/etc/gvm
 	ln -s /data/local-etc/gvm /etc/gvm
 	ln -s /data/local-etc/gvm /usr/local/etc/gvm
@@ -163,13 +180,13 @@ if ! [ -L /usr/local/etc/gvm ]; then
 fi
 echo "Fixing some permissions"
 # Fix ownership and permissions
-chown -R postgres:postgres /data/database /data/var-log/postgresql /run/postgresql 
+chown -R postgres:postgres /data/database /data/var-log/postgresql /run/postgresql
 chmod 750 /data/database
 chmod 770 /run/gvm /run/ospd /var/lib/gvm/gvmd/gnupg /run/gsad
 chown -R gvm:gvm  /data/var-lib/openvas /data/local-share/gvm /data/var-log/gvm /data/var-lib/gvm /run/gvm* /run/ospd /run/gsad /etc/openvas/gnupg
-chmod 777 /run 
+chmod 777 /run
 chmod 740 /run/mosquitto /var/log/mosquitto
-chown mosquitto /run/mosquitto /var/log/mosquitto 
+chown mosquitto /run/mosquitto /var/log/mosquitto
 chown -R postfix:postfix /var/lib/postfix
 chown -R gvm:gvm /data/var-lib/notus
 echo "All done ... mark the container as setup and ready"

@@ -29,7 +29,7 @@ echo "$1" > /usr/local/etc/running-as
 
 sorry() {
 	echo " Sorry.. this version not ready for multi-container."
-	echo " Check https://github.com/immauss/openvas for latest news."
+	echo " Check https://github.com/mitexleo/openvas for latest news."
 	echo " Sleeping for 30 days instead of just restarting." 
 	echo " You should use a different tag. " 
 	sleep 30d

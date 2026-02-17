@@ -138,8 +138,8 @@ if  [ "$NOBASE" == "false" ] || [ "$FORCEBASE" == "true" ] ; then
 	cd $BUILDHOME/ovasbase
 	BASESTART=$(date +%s)
 	# Always build all archs for ovasbase.
-	#docker buildx build --push  --platform  linux/amd64,linux/arm64,linux/arm/v7 -f Dockerfile -t immauss/ovasbase  .
-	docker buildx build --push  --platform  linux/amd64,linux/arm64 -f Dockerfile -t immauss/ovasbase:latest  .
+	#docker buildx build --push  --platform  linux/amd64,linux/arm64,linux/arm/v7 -f Dockerfile -t mitexleo/ovasbase  .
+	docker buildx build --push  --platform  linux/amd64,linux/arm64 -f Dockerfile -t mitexleo/ovasbase:latest  .
 	BASEFIN=$(date +%s)
 	cd ..
 fi
@@ -150,14 +150,14 @@ fi
 if ! [ -f tmp/build/$gsa.tar.gz ] || [ "x$GSABUILD" == "xtrue" ] ; then 
   if [ "$(cat gsa-final/ver.current)" != "$tag" ] || [ "$tag" == "latest" ]; then
 	echo "Starting container to build GSA" 
-	    docker pull immauss/ovasbase
+	    docker pull mitexleo/ovasbase
 		docker run -it --rm \
 			-v $(pwd)/ics-gsa:/ics-gsa \
 			-v $(pwd)/tmp/build:/build \
 			-v $(pwd):/build.d \
 			-v $(pwd)/gsa-final:/final \
 			-v $(pwd)/ver.current:/ver.current \
-			immauss/ovasbase -c "cd /build.d; bash build.d/gsa-main.sh $tag"
+			mitexleo/ovasbase -c "cd /build.d; bash build.d/gsa-main.sh $tag"
 		if [ $? -eq 0 ]; then
 			cp -f ver.current gsa-final/	
 		fi
@@ -178,7 +178,7 @@ SLIMSTART=$(date +%s)
 docker buildx build $PUBLISH \
    --platform $arch -f Dockerfile \
    --target slim \
-   -t immauss/openvas:${tag}-slim \
+   -t mitexleo/openvas:${tag}-slim \
    -f $DOCKERFILE .
 SLIMFIN=$(date +%s)
 
@@ -188,7 +188,7 @@ FINALSTART=$(date +%s)
 docker buildx build $PUBLISH \
 	--platform $arch \
    	--target final \
-	-t immauss/openvas:${tag} \
+	-t mitexleo/openvas:${tag} \
    	-f $DOCKERFILE .
 FINALFIN=$(date +%s)
 
@@ -238,9 +238,9 @@ if [ $RUNAFTER == "true" ]; then
 	docker rm -f $tag
 	# If the tag is beta, then we used --load locally, so no need to pull it. 
 	if [ "$tag" != "beta" ]; then
-		docker pull immauss/openvas:$tag
+		docker pull mitexleo/openvas:$tag
 	fi
-	docker run -d --name $tag -e SKIPSYNC=true -p 8080:9392 $RUNOPTIONS immauss/openvas:$tag 
+	docker run -d --name $tag -e SKIPSYNC=true -p 8080:9392 $RUNOPTIONS mitexleo/openvas:$tag 
 	docker logs -f $tag
 fi
 

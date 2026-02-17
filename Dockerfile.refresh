@@ -1,11 +1,11 @@
 # Environment variables for all
-FROM immauss/openvas:latest-slim AS final
+FROM mitexleo/openvas:latest-slim AS final
 ENV LANG=C.UTF-8
 ARG TAG
-LABEL maintainer="scott@immauss.com" \
+LABEL maintainer="scott@mitexleo.com" \
       version="$TAG-full" \
-      url="https://hub.docker.com/r/immauss/openvas" \
-      source="https://github.com/immauss/openvas"
+      url="https://hub.docker.com/r/mitexleo/openvas" \
+      source="https://github.com/mitexleo/openvas"
 # Add the archives.
 COPY globals.sql.xz /usr/lib/globals.sql.xz
 COPY gvmd.sql.xz /usr/lib/gvmd.sql.xz

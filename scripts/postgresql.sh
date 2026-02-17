@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -Eeo pipefail
 
-#Define  proper shutdown 
+# Set PostgreSQL version
+PGVER=${PGVER:-13}
+
+#Define  proper shutdown
 # This is only needed with the postgresql instance
 cleanup() {
     echo "Container stopped, performing shutdown"
-    su -c "/usr/lib/postgresql/13/bin/pg_ctl -D /data/database stop" postgres
+    su -c "/usr/lib/postgresql/${PGVER}/bin/pg_ctl -D /data/database stop" postgres
 }
 # Check for an existing DB.
 function DBCheck {
@@ -21,11 +24,11 @@ if [ -S /run/postgresql/.s.PGSQL.5432 ]; then
 	rm -f /run/postgresql/.s.PGSQL.5432
 fi
 # Until I find a better way, Force this here.
-chown -R postgres /run/postgresql 
+chown -R postgres /run/postgresql
 
 # Postgres config should be tighter.
 # Actually, postgress should be in its own container!
-# maybe redis should too. 
+# maybe redis should too.
 if [ ! -f "/setup" ]; then
 	echo "Creating postgresql.conf and pg_hba.conf"
 	# Need to look at restricting this. Maybe to localhost ?
@@ -50,8 +53,8 @@ fi
 PGFAIL=0
 PGUPFAIL=0
 echo "Starting PostgreSQL..."
-su -c "/usr/lib/postgresql/13/bin/pg_ctl -D /data/database start" postgres || PGFAIL=$?
-echo "pg exit with $PGFAIL ." 
+su -c "/usr/lib/postgresql/${PGVER}/bin/pg_ctl -D /data/database start" postgres || PGFAIL=$?
+echo "pg exit with $PGFAIL ."
 if [ $PGFAIL -ne 0 ]; then
         echo "It looks like postgres failed to start. ( Exit code: \"$?\" "
         echo "Assuming this is due to different database version and starting upgrade."
@@ -60,8 +63,8 @@ if [ $PGFAIL -ne 0 ]; then
                 echo "Looks like this is either not an upgrade problem, or the upgrade failed."
                 exit
         else
-                echo " DB Upgrade was a success. Starting postgresql 13"
-                su -c "/usr/lib/postgresql/13/bin/pg_ctl -D /data/database start" postgres
+                echo " DB Upgrade was a success. Starting postgresql ${PGVER}"
+                su -c "/usr/lib/postgresql/${PGVER}/bin/pg_ctl -D /data/database start" postgres
         fi
 fi
 
@@ -71,7 +74,7 @@ su -c " psql -lqt " postgres
 DB=$(su -c " psql -lqt" postgres | awk /gvmd/'{print $1}')
 # Do we need to load the default DB from archives in the image?
 echo "DB is $DB"
-ls -l /usr/lib/*.xz 
+ls -l /usr/lib/*.xz
 if [ "$DB" = "gvmd" ]; then
 	LOADDEFAULT="false"
 elif ! [ -f /usr/lib/gvmd.sql.xz ]; then
@@ -83,12 +86,12 @@ fi
 # Pass this variable to gvmd via /run
 echo $LOADDEFAULT > /run/loaddefault
 #
-# If no default is being loaded, then we need to create an empty database. 
+# If no default is being loaded, then we need to create an empty database.
 if [ -z $DB ] && [ $LOADDEFAULT = "false" ]; then
 	if [ $(DBCheck) -eq 1 ]; then
 		echo " It looks like there is already a gvmd database."
 		echo " Failing out to prevent overwriting the existing DB"
-		exit 
+		exit
 	fi
 	echo "Creating Greenbone Vulnerability Manager database"
 	su -c "createuser -DRS gvm" postgres
@@ -98,13 +101,13 @@ if [ -z $DB ] && [ $LOADDEFAULT = "false" ]; then
 	su -c "psql --dbname=gvmd --command='create extension \"uuid-ossp\";'" postgres
 	su -c "psql --dbname=gvmd --command='create extension \"pgcrypto\";'" postgres
 	chown postgres:postgres -R /data/database
-	su -c "/usr/lib/postgresql/13/bin/pg_ctl -D /data/database restart" postgres
+	su -c "/usr/lib/postgresql/${PGVER}/bin/pg_ctl -D /data/database restart" postgres
 
-#	su -c "gvm-manage-certs -V" gvm 
+#	su -c "gvm-manage-certs -V" gvm
 #	NOCERTS=$?
 #	while [ $NOCERTS -ne 0 ] ; do
 		su -c "gvm-manage-certs -vaf " gvm
-#		su -c "gvm-manage-certs -V " gvm 
+#		su -c "gvm-manage-certs -V " gvm
 #		NOCERTS=$?
 #	done
 fi
@@ -112,6 +115,6 @@ fi
 
 
 tail -f /data/var-log/postgresql/postgresql-gvmd.log &
-# This is part of making sure we shutdown postgres properly on container shutdown and only needs to exist 
+# This is part of making sure we shutdown postgres properly on container shutdown and only needs to exist
 # in postgresql instance
 wait $!

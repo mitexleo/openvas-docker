@@ -33,9 +33,9 @@ elif [ $SPACE -le 4 ]; then
 	exit
 fi
 # Force a pull of the latest image.
-docker pull immauss/openvas:$TAG
+docker pull mitexleo/openvas:$TAG
 echo "Starting container for an update"
-docker run -d -e NEWDB=true --name updater immauss/openvas:$TAG
+docker run -d -e NEWDB=true --name updater mitexleo/openvas:$TAG
 date
 echo "Sleeping for $STIME to make sure the feeds are updated in the db"
 sleep $STIME
@@ -94,7 +94,7 @@ cp $TAG.base.sql.xz /home/scott/Projects/openvas/base.sql.xz
 cp $TAG.var-lib.tar.xz /home/scott/Projects/openvas/var-lib.tar.xz
 
 # echo " Push updates to www"
-# scp *.xz push@www.immauss.com:/var/www/html/drupal/openvas/
+# scp *.xz push@www.mitexleo.com:/var/www/html/drupal/openvas/
 # if [ $? -ne 0 ]; then
 # 	echo "SCP of new db failed $?"
 # 	logger -t db-refresh "SCP of new db failed $?"
@@ -104,7 +104,7 @@ echo "Now rebuild the image"
 cd $WorkDir
 echo "$(pwd) Is current working directory."
 date > update.ts
-docker buildx build -f $DOCKERFILE --target final -t immauss/openvas:$TAG --platform linux/arm64,linux/amd64 --push .
+docker buildx build -f $DOCKERFILE --target final -t mitexleo/openvas:$TAG --platform linux/arm64,linux/amd64 --push .
 if [ $? -ne 0 ]; then
 	echo "Build failed."
 	exit

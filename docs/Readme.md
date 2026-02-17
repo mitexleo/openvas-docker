@@ -1,25 +1,25 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/immauss/openvas.svg)](https://hub.docker.com/r/immauss/openvas/)
-[![Docker Stars](https://img.shields.io/docker/stars/immauss/openvas?style=flat)](https://hub.docker.com/r/immauss/openvas/)
-[![Docker Stars](https://img.shields.io/docker/image-size/immauss/openvas.svg?maxAge=2592000)](https://hub.docker.com/r/immauss/openvas/)
-[![GitHub Issues](https://img.shields.io/github/issues-raw/immauss/openvas.svg)](https://github.com/immauss/openvas/issues)
+[![Docker Pulls](https://img.shields.io/docker/pulls/mitexleo/openvas.svg)](https://hub.docker.com/r/mitexleo/openvas/)
+[![Docker Stars](https://img.shields.io/docker/stars/mitexleo/openvas?style=flat)](https://hub.docker.com/r/mitexleo/openvas/)
+[![Docker Stars](https://img.shields.io/docker/image-size/mitexleo/openvas.svg?maxAge=2592000)](https://hub.docker.com/r/mitexleo/openvas/)
+[![GitHub Issues](https://img.shields.io/github/issues-raw/mitexleo/openvas.svg)](https://github.com/mitexleo/openvas/issues)
 [![Discord](https://img.shields.io/discord/809911669634498596?label=Discord&logo=discord)](https://discord.gg/DtGpGFf7zV)
-[![Twitter Badge](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/immauss)
-![GitHub Repo stars](https://img.shields.io/github/stars/immauss/openvas?style=social)
+[![Twitter Badge](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/mitexleo)
+![GitHub Repo stars](https://img.shields.io/github/stars/mitexleo/openvas?style=social)
 # A Greenbone Vulnerability Management docker image
 ### Brought to you by ###
-[![Immauss Cybersecurity](https://github.com/immauss/openvas/raw/master/images/ics-hz.png)](https://immauss.com "Immauss Cybersecurity")
+[![mitexleo Cybersecurity](https://github.com/mitexleo/openvas/raw/master/images/ics-hz.png)](https://mitexleo.com "mitexleo Cybersecurity")
 
 
 This lives as a docker container at: 
-[docker hub](https://hub.docker.com/repository/docker/immauss/openvas)
+[docker hub](https://hub.docker.com/repository/docker/mitexleo/openvas)
 
 The Greenbone Source code can be found at:
 [Greenbone Source Code](https://github.com/greenbone)
 
-The advantages of the Immauss container image vs the Greenbone images:
+The advantages of the mitexleo container image vs the Greenbone images:
 - Able to run a full scanner in a single image with or without volumes. 
 - Image contains a full database.
-- Speed to scanning. The Immauss image can be up and scanning in 15-20 minutes. ( With sufficient machine resources).
+- Speed to scanning. The mitexleo image can be up and scanning in 15-20 minutes. ( With sufficient machine resources).
 - The image on docker hub is updated weekly to ensure the database is up to date.
 
 The latest image is based on GVM 22.5.x  In single container mode, it runs all the components needed to create a scanner in a single container including:
@@ -55,7 +55,7 @@ These commands will pull, create, and start the container:
 **Without persistent volume:**
 
 ```
-docker run --detach --publish 8080:9392 -e PASSWORD="Your admin password here" --name openvas immauss/openvas
+docker run --detach --publish 8080:9392 -e PASSWORD="Your admin password here" --name openvas mitexleo/openvas
 ```
 **To create a volume to store persistent data.**
 ```
@@ -65,7 +65,7 @@ docker volume create openvas
 **Start the container with a persistent volume:**
 
 ```shell
-docker run --detach --publish 8080:9392 -e PASSWORD="Your admin password here" --volume openvas:/data --name openvas immauss/openvas
+docker run --detach --publish 8080:9392 -e PASSWORD="Your admin password here" --volume openvas:/data --name openvas mitexleo/openvas
 ```
 
 You can use whatever `--name` you'd like but for the sake of this guide we're using openvas.
@@ -127,7 +127,7 @@ Restoral is a bit more difficult. This assumes you are using a volume named "ope
 6. Stop and remove the temporary container.
 
 ```
-docker run -it -e RESTORE=true -v <path to backupfile>:/usr/lib/db-backup.sql --rm -v openvas:/data immauss/openvas
+docker run -it -e RESTORE=true -v <path to backupfile>:/usr/lib/db-backup.sql --rm -v openvas:/data mitexleo/openvas
 ```
 
 # Full backup 
