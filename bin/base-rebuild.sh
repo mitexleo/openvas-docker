@@ -45,7 +45,8 @@ while ! [ -z "$1" ]; do
 	PUBLISH="--push"
 	GSABUILD=true
 	NOBASE=true
-	echo "Publishing to docker hub. Forcing GSA Build and NOBASE."
+	FORCEBASE=true
+	echo "Publishing to docker hub. Forcing GSA Build and NOBASE, but FORCEBASE due to package changes."
 	;;
 	--load)
 	shift
@@ -54,7 +55,7 @@ while ! [ -z "$1" ]; do
 	-t)
 	shift
 	tag=$1
-	shift	
+	shift
 	;;
 	-a)
 	shift
@@ -64,7 +65,7 @@ while ! [ -z "$1" ]; do
 	-p)
 	echo " Flushing build kit cache"
 	PRUNESTART=$(date +%s)
-	docker buildx prune -af 
+	docker buildx prune -af
 	PRUNEFIN=$(date +%s)
 	shift
 	;;
@@ -109,7 +110,7 @@ if [ "$tag" == "beta" ]; then
 	if [ "$FORCEBASE" == "true" ]; then
 		NOBASE=false
 		echo "Found FORCEBASE ... building ovasbase"
-	else	
+	else
 		NOBASE=true
 	fi
 elif [ -z $arch ]; then
@@ -117,7 +118,7 @@ elif [ -z $arch ]; then
 	ARM="true"
 fi
 # Make the version # in the image meta data consistent
-# This will leave the 
+# This will leave the
 if [ "$tag" != "latest" ] && [ "$tag" != "beta" ] && [ "$tag" != "test" ]; then
 	echo $tag > ver.current
 fi
@@ -129,7 +130,7 @@ echo "Building with $tag and $arch"
 
 set -Eeuo pipefail
 echo "NOBASE: $NOBASE FORCEBASE: $FORCEBASE"
-echo 
+echo
 sleep 5
 
 if  [ "$NOBASE" == "false" ] || [ "$FORCEBASE" == "true" ] ; then
@@ -143,13 +144,13 @@ if  [ "$NOBASE" == "false" ] || [ "$FORCEBASE" == "true" ] ; then
 	BASEFIN=$(date +%s)
 	cd ..
 fi
-# First we build GSA using a single ovasbase x86_64 container. 
+# First we build GSA using a single ovasbase x86_64 container.
 # this SIGNIFICANTLY speeds the builds.
 # first check to see if the current version has been built already
 
-if ! [ -f tmp/build/$gsa.tar.gz ] || [ "x$GSABUILD" == "xtrue" ] ; then 
-  if [ "$(cat gsa-final/ver.current)" != "$tag" ] || [ "$tag" == "latest" ]; then
-	echo "Starting container to build GSA" 
+if ! [ -f tmp/build/$gsa.tar.gz ] || [ "x$GSABUILD" == "xtrue" ] ; then
+  if [ ! -f gsa-final/ver.current ] || [ "$(cat gsa-final/ver.current)" != "$tag" ] || [ "$tag" == "latest" ]; then
+	echo "Starting container to build GSA"
 	    docker pull mitexleo/ovasbase
 		docker run -it --rm \
 			-v $(pwd)/ics-gsa:/ics-gsa \
@@ -159,7 +160,7 @@ if ! [ -f tmp/build/$gsa.tar.gz ] || [ "x$GSABUILD" == "xtrue" ] ; then
 			-v $(pwd)/ver.current:/ver.current \
 			mitexleo/ovasbase -c "cd /build.d; bash build.d/gsa-main.sh $tag"
 		if [ $? -eq 0 ]; then
-			cp -f ver.current gsa-final/	
+			cp -f ver.current gsa-final/
 		fi
   else
 	echo "Looks like we have already built for $tag"
@@ -202,7 +203,7 @@ if ! [ $PRUNESTART ]; then
 	PRUNE=$(expr $PRUNEFIN - $PRUNESTART)
 	echo "Build Kit Cache flush: $(Timemath $PRUNE)" | tee timing
 fi
-if ! [ $BASESTART ]; then 
+if ! [ $BASESTART ]; then
 	BASE=$(expr $BASEFIN - $BASESTART )
 	echo "ovasbase build time: $(TimeMath $BASE)" | tee -a timing
 fi
@@ -217,7 +218,7 @@ FULL=$(expr $FINALFIN - $STARTTIME )
 echo "Slim Image build time: $(TimeMath $SLIM)" | tee -a timing
 echo "Final Image build time: $(TimeMath $FINAL)" | tee -a timing
 echo "Total run time: $(TimeMath $FULL)" | tee -a timing
-# Update the versions in the Readme.md 
+# Update the versions in the Readme.md
 if [ "$PUBLISH" != " " ]; then
 	echo "Updating Readme.md with current versions"
 	# Readme Template
@@ -236,11 +237,11 @@ fi
 
 if [ $RUNAFTER == "true" ]; then
 	docker rm -f $tag
-	# If the tag is beta, then we used --load locally, so no need to pull it. 
+	# If the tag is beta, then we used --load locally, so no need to pull it.
 	if [ "$tag" != "beta" ]; then
 		docker pull mitexleo/openvas:$tag
 	fi
-	docker run -d --name $tag -e SKIPSYNC=true -p 8080:9392 $RUNOPTIONS mitexleo/openvas:$tag 
+	docker run -d --name $tag -e SKIPSYNC=true -p 8080:9392 $RUNOPTIONS mitexleo/openvas:$tag
 	docker logs -f $tag
 fi
 
@@ -249,7 +250,3 @@ if [ "$TEST" == "true" ]; then
 	echo "Starting full scan testing"
 	./run-test.sh $tag
 fi
-
-
-
-
