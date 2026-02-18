@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  openvas-test:
+    image: mitexleo/openvas:latest
+    ports:
+      - "8080:9392"
+    environment:
+      - "PASSWORD=admin"
+      - "USERNAME=admin"
+      - "RELAYHOST=172.17.0.1"
+      - "SMTPPORT=25"
+      - "REDISDBS=512"
+      - "QUIET=false"
+      - "NEWDB=false"
+      - "SKIPSYNC=true"
+      - "RESTORE=false"
+      - "DEBUG=false"
+      - "HTTPS=false"
+      - "GMP=9390"
+      - "PGVER=15"
+      - "REPORT_LINES=1000"
+    container_name: openvas-test-no-vol
+    restart: unless-stopped
