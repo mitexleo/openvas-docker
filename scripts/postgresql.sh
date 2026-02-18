@@ -31,6 +31,8 @@ chown -R postgres /run/postgresql
 # maybe redis should too.
 if [ ! -f "/setup" ]; then
 	echo "Creating postgresql.conf and pg_hba.conf"
+	# Create conf.d directory if it doesn't exist
+	mkdir -p /data/database/conf.d
 	# Need to look at restricting this. Maybe to localhost ?
 	echo "listen_addresses = '*'" > /data/database/postgresql.conf
 	echo "port = 5432" >> /data/database/postgresql.conf

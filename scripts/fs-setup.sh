@@ -42,6 +42,7 @@ echo "Setting up soft links"
 if [[ ! -d /data/database/base ]] && \
    ([[ -z "$1" ]] || [[ "$1" == "postgresql" ]] || [[ "$1" == "refresh" ]]); then
 	echo "Database"
+	PGVER=${PGVER:-15}
 	# Ensure PostgreSQL ${PGVER} is installed and tools available
 	if ! command -v pg_lsclusters >/dev/null 2>&1; then
 		echo "ERROR: PostgreSQL tools not found. Ensure PostgreSQL ${PGVER} is installed."
@@ -124,11 +125,13 @@ if [[ ! -d /data/database/base ]] && \
 		exit 1
 	fi
 
+	# Move data to persistent storage
 	echo "Moving PostgreSQL data to persistent storage at /data/database..."
 	# Clear target directory (should already be empty from mkdir -p)
 	rm -rf /data/database/* 2>/dev/null || true
 	# Move all files from the initialized cluster
 	mv /var/lib/postgresql/${PGVER}/main/* /data/database/
+
 	# Remove the now-empty directory
 	rmdir /var/lib/postgresql/${PGVER}/main
 	# Create symlink from PostgreSQL's expected location to persistent storage
