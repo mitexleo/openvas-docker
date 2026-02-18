@@ -3,7 +3,7 @@ services:
     mem_limit: "8g"
     cpus: "3"
     ports:
-      - "8088:9392"
+      - "8080:9392"
     environment:
       - "PGVER=15"
       - "PASSWORD=admin"
@@ -17,6 +17,8 @@ services:
       - "RESTORE=false"  # This probably not be used from compose... see docs.
       - "DEBUG=false"  # This will cause the container to stop and not actually start gvmd
       - "HTTPS=false"  # wether to use HTTPS or not
+    volumes:
+      - "openvas:/data"
     cap_add:
       - NET_ADMIN # for capturing packages in promiscuous mode
       - NET_RAW # for raw sockets e.g. used for the boreas alive detection
@@ -37,3 +39,5 @@ services:
   scannable-suse:
     container_name: suse-${CONFIG}
     image: mitexleo/scannable:suse
+volumes:
+  openvas:

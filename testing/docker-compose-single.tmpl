@@ -5,7 +5,6 @@ services:
     ports:
       - "8088:9392"
     environment:
-      - "PGVER=15"
       - "PASSWORD=admin"
       - "USERNAME=admin"
       - "RELAYHOST=172.17.0.1"
@@ -21,7 +20,7 @@ services:
       - NET_ADMIN # for capturing packages in promiscuous mode
       - NET_RAW # for raw sockets e.g. used for the boreas alive detection
     container_name: openvas-${CONFIG}
-    image: mitexleo/openvas:${TAG}
+    image: mitexleo/openvas:XXTAGXX
   scannable-ubuntu:
     container_name: ubuntu-${CONFIG}
     image: mitexleo/scannable

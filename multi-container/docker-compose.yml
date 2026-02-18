@@ -1,230 +1,81 @@
-
-version: '3.8'
-
-# Multi-container Greenbone Vulnerability Management (OpenVAS) deployment
-# This splits the single container into separate services for better scalability and isolation
-
 services:
-  # PostgreSQL database for gvmd
   postgresql:
-    image: postgres:15-alpine
-    container_name: gvm-postgresql
-    environment:
-      - POSTGRES_USER=gvm
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-gvm}
-      - POSTGRES_DB=gvmd
+    container_name: ovas_postgresql
+    image: mitexleo/openvas:${TAG}
+    command: postgresql
+    #init: true
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ovasrun:/run/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gvm -d gvmd"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "openvas:/data"
+      - "ovasrun:/run"
     restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Redis for OpenVAS scanner
-  redis:
-    image: redis:7-alpine
-    container_name: gvm-redis
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis-data:/data
-      - ovasrun:/run/redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Greenbone Vulnerability Manager daemon
-  gvmd:
-    image: mitexleo/openvas:latest
-    container_name: gvm-gvmd
-    command: gvmd
-    environment:
-      - POSTGRES_HOST=postgresql
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=gvm
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-gvm}
-      - POSTGRES_DB=gvmd
-      - USERNAME=${USERNAME:-admin}
-      - PASSWORD=${PASSWORD:-admin}
-      - RELAYHOST=${RELAYHOST:-172.17.0.1}
-      - SMTPPORT=${SMTPPORT:-25}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - GMP_PORT=${GMP:-9390}
-      - REPORT_LINES=${REPORT_LINES:-1000}
-      - SKIPSYNC=${SKIPSYNC:-true}
-      - DEBUG=${DEBUG:-false}
-    volumes:
-      - gvmd-data:/var/lib/gvm
-      - ovasrun:/run
-      - certs:/var/lib/gvm/CA
-    depends_on:
-      postgresql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "gvmd", "--status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # OpenVAS scanner (ospd-openvas)
-  openvas:
-    image: mitexleo/openvas:latest
-    container_name: gvm-openvas
-    command: openvas
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - GVM_D_HOST=gvmd
-      - GVM_D_PORT=${GMP:-9390}
-      - OSPD_SOCKET=/run/ospd/ospd-openvas.sock
-    volumes:
-      - openvas-data:/var/lib/openvas
-      - ovasrun:/run
-    depends_on:
-      - redis
-      - gvmd
-    healthcheck:
-      test: ["CMD", "pgrep", "-f", "ospd-openvas"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Notus scanner for SCA (Software Composition Analysis)
-  notus:
-    image: mitexleo/openvas:latest
-    container_name: gvm-notus
-    command: notus
-    environment:
-      - NOTUS_SCANNER_SOCKET=/run/notus-scanner/notus-scanner.sock
-      - NOTUS_SCANNER_PRODUCTS_DIR=/var/lib/notus/products
-    volumes:
-      - notus-data:/var/lib/notus
-      - ovasrun:/run
-    depends_on:
-      - gvmd
-    healthcheck:
-      test: ["CMD", "pgrep", "-f", "notus-scanner"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Mosquitto MQTT broker (optional, for some scanner communications)
   mosquitto:
-    image: eclipse-mosquitto:2
-    container_name: gvm-mosquitto
-    volumes:
-      - mosquitto-config:/mosquitto/config
-      - mosquitto-data:/mosquitto/data
-      - mosquitto-log:/mosquitto/log
-      - ovasrun:/run/mosquitto
+    container_name: ovas_mosquitto
+    image: mitexleo/openvas:${TAG}
+    command: mosquitto
     restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Greenbone Security Assistant (web interface)
+    volumes:
+      - "openvas:/data"
+      - "ovasrun:/run"
+  notus:
+    container_name: ovas_notus
+    image: mitexleo/openvas:${TAG}
+    command: notus
+    restart: unless-stopped
+    volumes:
+      - "openvas:/data"
+      - "ovasrun:/run"
+    depends_on: 
+      - "mosquitto" 
+  gvmd:
+    container_name: ovas_gvmd
+    image: mitexleo/openvas:${TAG}
+    command: gvmd
+    depends_on: 
+      - "postgresql"
+    volumes:
+      - "openvas:/data"
+      - "ovasrun:/run"
+    environment:
+      - "RELAYHOST=$RELAYHOST"
+      - "SMTPPORT=$SMTPPORT"
+      - "QUIET=$QUIET"  # dump feed sync noise to /dev/null
+      - "SKIPSYNC=$SKIPSYNC" # Skips the feed sync on startup.
+      - "GMP=$GMP"    # to enable see docs
+    restart: unless-stopped
+  redis:
+    container_name: ovas_redis
+    image: mitexleo/openvas:${TAG}
+    command: redis
+    depends_on:
+      - "gvmd"
+    volumes: 
+      - "ovasrun:/run"
+    restart: unless-stopped
+  openvas:
+    container_name: openvas
+    image: mitexleo/openvas:${TAG}
+    init: true
+    command: openvas
+    depends_on: 
+      - "redis"
+    volumes:
+      - "openvas:/data"
+      - "ovasrun:/run"
+    restart: unless-stopped
   gsad:
-    image: mitexleo/openvas:latest
-    container_name: gvm-gsad
+    container_name: ovas_gsad
+    image: mitexleo/openvas:${TAG}
     command: gsad
+    depends_on:
+      - "gvmd"
+    environment:
+      - "HTTPS=$HTTPS"  # wether to use HTTPS or not
     ports:
-      - "${HTTP_PORT:-8080}:9392"
-    environment:
-      - GSAD_PORT=9392
-      - GVM_D_HOST=gvmd
-      - GVM_D_PORT=${GMP:-9390}
-      - HTTPS=${HTTPS:-false}
-      - SSL_CERT_FILE=${SSL_CERT_FILE:-/var/lib/gvm/CA/servercert.pem}
-      - SSL_KEY_FILE=${SSL_KEY_FILE:-/var/lib/gvm/CA/serverkey.pem}
-    volumes:
-      - gsad-data:/usr/local/share/gvm/gsad
-      - ovasrun:/run
-      - certs:/var/lib/gvm/CA
-    depends_on:
-      - gvmd
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9392/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      - "8080:9392"
     restart: unless-stopped
-    networks:
-      - gvm-network
-
-  # Feed synchronization service (optional, runs periodically)
-  feed-sync:
-    image: mitexleo/openvas:latest
-    container_name: gvm-feed-sync
-    command: refresh
-    environment:
-      - QUIET=${QUIET:-false}
-      - SKIPSYNC=${SKIPSYNC:-false}
-    volumes:
-      - gvmd-data:/var/lib/gvm
-      - openvas-data:/var/lib/openvas
-      - notus-data:/var/lib/notus
-      - feed-sync-output:/mnt/output
-    depends_on:
-      - gvmd
-    restart: "no"  # Manual or cron execution
-    networks:
-      - gvm-network
-
+  scannable:
+    image: mitexleo/scannable
+    container_name: ovas_scannable
 volumes:
-  postgres-data:
-  redis-data:
-  gvmd-data:
-  openvas-data:
-  notus-data:
-  gsad-data:
-  mosquitto-config:
-  mosquitto-data:
-  mosquitto-log:
-  feed-sync-output:
-  ovasrun:  # Shared volume for Unix sockets
-  certs:    # Shared volume for certificates
-
-networks:
-  gvm-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-
-# Environment variables that can be set in .env file:
-# POSTGRES_PASSWORD=gvm
-# USERNAME=admin
-# PASSWORD=admin
-# RELAYHOST=172.17.0.1
-# SMTPPORT=25
-# GMP=9390
-# REPORT_LINES=1000
-# SKIPSYNC=true
-# DEBUG=false
-# HTTPS=false
-# HTTP_PORT=8080
-# QUIET=false
+  openvas: 
+  ovasrun: 
