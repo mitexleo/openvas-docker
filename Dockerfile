@@ -13,7 +13,7 @@ ENV VER="$TAG"
 # Build everything that requires a compiler here and install to /artifacts for copy to 2nd stage.
 # we don't care about layer count here, in fact multiple layers helps when there are problems witha build
 # as the previous layers will be cached and reduce build time when troubleshooing issues
-RUN mkdir /build.d
+RUN mkdir -p /build.d
 COPY build.rc ver.current /
 COPY build.d/package-list-build /build.d/
 COPY build.d/env.sh /build.d
