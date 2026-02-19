@@ -89,7 +89,26 @@ echo "Redis ready."
 
 # Postgres config should be tighter.
 if [ ! -f "/setup" ]; then
+	echo "Creating postgresql.conf and pg_hba.conf"
+	# Create conf.d directory if it doesn't exist
+	mkdir -p /data/database/conf.d
+	# Need to look at restricting this. Maybe to localhost ?
+	echo "listen_addresses = '*'" > /data/database/postgresql.conf
+	echo "port = 5432" >> /data/database/postgresql.conf
+	echo "log_destination = 'stderr'" >> /data/database/postgresql.conf
+	echo "logging_collector = on" >> /data/database/postgresql.conf
+	echo "log_directory = '/data/var-log/postgresql/'" >> /data/database/postgresql.conf
+	echo "log_filename = 'postgresql-gvmd.log'" >> /data/database/postgresql.conf
+	echo "log_file_mode = 0666" >> /data/database/postgresql.conf
+	echo "log_truncate_on_rotation = off" >> /data/database/postgresql.conf
+	echo "log_line_prefix = '%m [%p] %q%u@%d '" >> /data/database/postgresql.conf
+	echo "log_timezone = 'Etc/UTC'" >> /data/database/postgresql.conf
+	# This probably tooooo open.
+	echo -e "host\tall\tall\t0.0.0.0/0\tmd5" > /data/database/pg_hba.conf
+	echo -e "host\tall\tall\t::0/0\tmd5" >> /data/database/pg_hba.conf
+	echo -e "local\tall\tall\ttrust"  >> /data/database/pg_hba.conf
 	chown postgres:postgres -R /data/database
+	touch /setup
 fi
 PGFAIL=0
 PGUPFAIL=0
