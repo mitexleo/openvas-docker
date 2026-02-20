@@ -1,13 +1,13 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mitexleo/openvas.svg)](https://hub.docker.com/r/mitexleo/openvas/)
 [![Docker Stars](https://img.shields.io/docker/stars/mitexleo/openvas?style=flat)](https://hub.docker.com/r/mitexleo/openvas/)
 [![Docker Stars](https://img.shields.io/docker/image-size/mitexleo/openvas.svg?maxAge=2592000)](https://hub.docker.com/r/mitexleo/openvas/)
-[![GitHub Issues](https://img.shields.io/github/issues-raw/mitexleo/openvas.svg)](https://github.com/mitexleo/openvas-docker/issues)
+[![GitHub Issues](https://img.shields.io/github/issues-raw/sysplore/openvas-docker.svg)](https://github.com/sysplore/openvas-docker/issues)
 [![Discord](https://img.shields.io/discord/809911669634498596?label=Discord&logo=discord)](https://discord.gg/DtGpGFf7zV)
 [![Twitter Badge](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/mitexleo)
-![GitHub Repo stars](https://img.shields.io/github/stars/mitexleo/openvas-docker?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/sysplore/openvas-docker?style=social)
 # A Greenbone Vulnerability Management docker image
 ### Brought to you by ###
-[![mitexleo Cybersecurity](https://github.com/mitexleo/openvas/raw/master/images/ics-hz.png)](https://mitexleo.com "mitexleo Cybersecurity")
+[![Sysplore](branding/Sysplore.png)](https://github.com/sysplore "Sysplore")
 
 
 This lives as a docker container at: 
@@ -16,10 +16,10 @@ This lives as a docker container at:
 The Greenbone Source code can be found at:
 [Greenbone Source Code](https://github.com/greenbone)
 
-The advantages of the mitexleo container image vs the Greenbone images:
+The advantages of the Sysplore container image vs the Greenbone images:
 - Able to run a full scanner in a single image with or without volumes. 
 - Image contains a full database.
-- Speed to scanning. The mitexleo image can be up and scanning in 15-20 minutes. ( With sufficient machine resources).
+- Speed to scanning. The Sysplore image can be up and scanning in 15-20 minutes. ( With sufficient machine resources).
 - The image on docker hub is updated weekly to ensure the database is up to date.
 
 The latest image is based on GVM 22.5.x  In single container mode, it runs all the components needed to create a scanner in a single container including:

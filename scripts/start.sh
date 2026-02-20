@@ -4,9 +4,9 @@ echo "starting container ver $(cat /ver.current) at: $(date)"
 if ! [ -f /.fs-setup-complete ]; then
 	echo "Setting up container filesystem"
 	/scripts/fs-setup.sh $1   # passing this here so only single & postgresql mv the DB files.
-elif [ -z $1 ]; then  # We check for this as in multi-container or kubernets, 
+elif [ -z $1 ]; then  # We check for this as in multi-container or kubernets,
                 # this will nuke the sockets on the shared volume
-				# Which is bad. 
+				# Which is bad.
 	echo "Looks like this container has already been started once."
 	echo "Just doing a little cleanup instead of the whole fs-setup."
 	ls -l /.fs-setup-complete
@@ -29,9 +29,9 @@ echo "$1" > /usr/local/etc/running-as
 
 sorry() {
 	echo " Sorry.. this version not ready for multi-container."
-	echo " Check https://github.com/mitexleo/openvas for latest news."
-	echo " Sleeping for 30 days instead of just restarting." 
-	echo " You should use a different tag. " 
+	echo " Check https://github.com/sysplore/openvas-docker for latest news."
+	echo " Sleeping for 30 days instead of just restarting."
+	echo " You should use a different tag. "
 	sleep 30d
 }
 
@@ -62,7 +62,7 @@ case $1 in
 ;;
 	mosquitto)
 	echo "Starting the mosquitto !!"
-	exec /scripts/mosquitto.sh 
+	exec /scripts/mosquitto.sh
 ;;
 	remote)
 	echo "Start remote scanner !!"
@@ -74,7 +74,7 @@ case $1 in
 ;;
 	refresh)
 	echo "Starting gvmd & openvas for data update"
-	/scripts/single.sh $@ 
+	/scripts/single.sh $@
 	echo "Updating data feeds"
 	exec /scripts/feed-refresh.sh
 ;;

@@ -43,7 +43,7 @@ ENV VER="$TAG"
 LABEL maintainer="contact@mitexleo.one" \
     version="$VER-slim" \
     url="https://hub.docker.com/r/mitexleo/openvas" \
-    source="https://github.com/mitexleo/openvas"
+    source="https://github.com/sysplore/openvas-docker"
 EXPOSE 9392
 ENV LANG=C.UTF-8
 # Copy the just built from stage 0
@@ -97,7 +97,7 @@ ENV VER="$TAG"
 LABEL maintainer="contact@mitexleo.one" \
     version="$VER-full" \
     url="https://hub.docker.com/r/mitexleo/openvas" \
-    source="https://github.com/mitexleo/openvas"
+    source="https://github.com/sysplore/openvas-docker"
 
 COPY globals.sql.xz /usr/lib/globals.sql.xz
 COPY gvmd.sql.xz /usr/lib/gvmd.sql.xz

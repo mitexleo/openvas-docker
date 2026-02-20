@@ -5,13 +5,13 @@ ARG TAG
 LABEL maintainer="scott@mitexleo.com" \
       version="$TAG-full" \
       url="https://hub.docker.com/r/mitexleo/openvas" \
-      source="https://github.com/mitexleo/openvas"
+      source="https://github.com/sysplore/openvas-docker"
 # Add the archives.
 COPY globals.sql.xz /usr/lib/globals.sql.xz
 COPY gvmd.sql.xz /usr/lib/gvmd.sql.xz
 COPY var-lib.tar.xz /usr/lib/var-lib.tar.xz
 #COPY scripts/* /scripts/
-# Healthcheck needs be an on image script that will know what service is running and check it. 
+# Healthcheck needs be an on image script that will know what service is running and check it.
 # Current image function stored in /usr/local/etc/running-as
 HEALTHCHECK --interval=300s --start-period=300s --timeout=120s \
   CMD /scripts/healthcheck.sh || exit 1
